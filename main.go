@@ -18,6 +18,5 @@ func main() {
 			log.Fatal("main:Accept", err.Error())
 			continue
 		}
-
 	}
 }
