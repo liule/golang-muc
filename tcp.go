@@ -11,7 +11,6 @@ type TcpConnection struct {
 	*net.TCPConn
 	ReadBuf  []byte //读取的byte数组
 	WriteBuf []byte //写入的byte数组
-	timeout  time.Duration
 }
 
 type TcpServer struct {
@@ -54,20 +53,33 @@ func (this *TcpConnection) RemotePort() string {
 }
 
 // 一次读取的字节数,循环读取
-func (this *TcpConnection) Read(length int) ([]byte, error) {
+func (this *TcpConnection) Read(length int, timeout time.Duration) ([]byte, error) {
 	if len(this.ReadBuf) > length {
-		err := this.RealRead(this.ReadBuf, length)
-		return this.ReadBuf, err
+		err := this.RealRead(this.ReadBuf[0:length], length)
+		return this.ReadBuf[0:length], err
 	}
 	data := make([]byte, length)
-	err := this.RealRead(data, length)
+	err := this.RealRead(data, length, timeout)
 	return data, err
 }
 
-func (this *TcpConnection) RealRead(data []byte, length int) error {
+// 实际的tcp read
+func (this *TcpConnection) RealRead(data []byte, timeout time.Duration) error {
 	// 设置读写超时时间
-	this.TCPConn.SetReadDeadline(time.Now().Add(this.timeout))
-	n := 0
+	this.TCPConn.SetReadDeadline(time.Now().Add(timeout))
+	length := len(data)
+	for length > 0 {
+		n, err := this.TCPConn.Read(data[n:])
+		if err != nil {
+			return err
+		}
+		if length > 0 {
+			data = data[n:]
+		}
+
+		length = length - n
+	}
+	return nil
 }
 
 func (this *TcpConnection) Write(stream []byte) error {
