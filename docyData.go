@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"time"
 )
 
@@ -9,7 +8,7 @@ import (
 type DocyData struct {
 	version   int16
 	protoType int16
-	bodyLen   int
+	bodyLen   int32
 	body      []byte
 }
 
@@ -52,7 +51,7 @@ func (this *DocyData) Parser(tcpConnection *TcpConnection, timeout time.Duration
 	this.protoType = StreamToInt16(head[2:4], BigEndian)
 	this.bodyLen = StreamToInt32(head[4:8], BigEndian)
 	this.body = make([]byte, this.bodyLen)
-	if body, err := tcpConnection.Read(this.bodyLen, timeout); err != nil {
+	if body, err := tcpConnection.Read(int(this.bodyLen), timeout); err != nil {
 		return err
 	} else {
 		copy(this.body, body)
@@ -61,7 +60,7 @@ func (this *DocyData) Parser(tcpConnection *TcpConnection, timeout time.Duration
 	return nil
 }
 
-func (this *DocyData) Write(tcpConnection *TcpConnection, timeout time.Duration) {
+func (this *DocyData) Write(tcpConnection *TcpConnection, timeout time.Duration) error {
 	tcpConnection.SetWriteDeadline(time.Now().Add(timeout))
 	return tcpConnection.Write(this.ConvertToStream())
 }
@@ -74,6 +73,8 @@ func (this *DocyData) ConvertToStream() []byte {
 	copy(data[8:this.bodyLen+8], this.body)
 	return data
 }
+
+type ByteOrder int
 
 const (
 	BigEndian ByteOrder = iota

@@ -1,14 +1,11 @@
 package main
 
 import (
-	"fmt"
-	"github.com/fogcreek/mini"
 	"log"
-	"net"
 )
 
 func main() {
-	tcpServer, err := NewTcpServer(ConfigInfo.String("listen"))
+	tcpServer, err := NewTcpServer(ConfigInfo.String("listen", "5678"))
 	if err != nil {
 		panic(err.Error())
 	}
@@ -18,5 +15,7 @@ func main() {
 			log.Fatal("main:Accept", err.Error())
 			continue
 		}
+		server := NewServer(tcpConnection, 50)
+		go server.Loop()
 	}
 }

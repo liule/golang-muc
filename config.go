@@ -12,7 +12,7 @@ func init() {
 
 }
 
-func NewConfig() *Config {
+func NewConfig() *mini.Config {
 	flag.StringVar(&C, "f", "", "config file")
 	flag.Parse()
 	if C == "" {
