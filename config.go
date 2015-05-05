@@ -21,6 +21,7 @@ func NewConfig() *mini.Config {
 	if conf, err := mini.LoadConfiguration(C); err != nil {
 		panic(err.Error())
 	} else {
+		println("NewConfig", conf.String("listen", ":80"))
 		return conf
 	}
 }

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+	"github.com/golang/protobuf/proto"
 	"time"
 )
 
@@ -45,18 +47,30 @@ func (this *DocyData) SetBody(body []byte) {
 func (this *DocyData) Parser(tcpConnection *TcpConnection, timeout time.Duration) error {
 	head, err := tcpConnection.Read(8, timeout)
 	if err != nil {
+		Error(err.Error())
 		return err
 	}
 	this.version = StreamToInt16(head[0:2], BigEndian)
 	this.protoType = StreamToInt16(head[2:4], BigEndian)
 	this.bodyLen = StreamToInt32(head[4:8], BigEndian)
+	println("Parser:", this.version, this.protoType, this.bodyLen)
+	if this.bodyLen <= 0 {
+		return errors.New("Parser fail")
+	}
 	this.body = make([]byte, this.bodyLen)
 	if body, err := tcpConnection.Read(int(this.bodyLen), timeout); err != nil {
+		Error(err.Error())
 		return err
 	} else {
 		copy(this.body, body)
 	}
-
+	// 进行解码
+	newTest := &Test{}
+	err = proto.Unmarshal(this.body, newTest)
+	if err != nil {
+		Error("unmarshaling error: ", err)
+	}
+	println("unmarshal:   ", newTest.GetLabel())
 	return nil
 }
 

@@ -1,21 +1,15 @@
 package main
 
-import (
-	"log"
-)
+import ()
+
+func init() {
+	SetConsole(true)
+	SetRollingFile("./log", "server.log", 10, 500, MB)
+	SetRollingDaily("./log", "server.log")
+	SetLevel(DEBUG)
+}
 
 func main() {
-	tcpServer, err := NewTcpServer(ConfigInfo.String("listen", "5678"))
-	if err != nil {
-		panic(err.Error())
-	}
-	for {
-		tcpConnection, err := tcpServer.Accept()
-		if err != nil {
-			log.Fatal("main:Accept", err.Error())
-			continue
-		}
-		server := NewServer(tcpConnection, 50)
-		go server.Loop()
-	}
+	go Listen()
+	select {}
 }
